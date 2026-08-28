@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍎 Kids Calculator</title>
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-calculator: #ffffff;
+            --bg-display: #fafcff;
+            --bg-number: #f0f4f8;
+            --bg-number-hover: #e2e8f0;
+            --bg-operator: #e8f0fe;
+            --bg-operator-hover: #d4e3fc;
+            --bg-function: #f0f0f0;
+            --bg-function-hover: #e0e0e0;
+            --bg-equals: #4a90d9;
+            --bg-equals-hover: #357abd;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-white: #ffffff;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --border-radius: 1.5rem;
+            --gap: 0.7rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-primary);
+            padding: 1rem;
+        }
+
+        .calculator {
+            max-width: 420px;
+            width: 100%;
+            background: var(--bg-calculator);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* ===== Display ===== */
+        .display {
+            background: var(--bg-display);
+            border-radius: 1.2rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.2rem;
+            border: 2px solid #e2e8f0;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .display-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            min-height: 30px;
+        }
+
+        .expression {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+            flex: 1;
+        }
+
+        .memory-badge {
+            font-size: 0.7rem;
+            background: #e8f0fe;
+            color: #4a90d9;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .result {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+            min-height: 3.5rem;
+            text-align: right;
+        }
+
+        /* ===== Visual Area Inside Display ===== */
+        .visual-area {
+            min-height: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 8px 0 4px 0;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px dashed #e2e8f0;
+            margin-top: 6px;
+        }
+
+        .visual-emoji {
+            font-size: 1.8rem;
+            animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: inline-block;
+        }
+
+        .visual-emoji.operator-symbol {
+            font-size: 1.4rem;
+            color: #4a90d9;
+            font-weight: 700;
+            margin: 0 4px;
+            animation: none;
+        }
+
+        .visual-emoji.equals-symbol {
+            font-size: 1.4rem;
+            color: #e53e3e;
+            font-weight: 700;
+            margin: 0 4px;
+            animation: none;
+        }
+
+        .visual-emoji.result-emoji {
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), float 2s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0) rotate(-15deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* ===== Theme Selector ===== */
+        .theme-selector {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            padding: 0.3rem 0.7rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 1.5rem;
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.05);
+            border-color: #4a90d9;
+        }
+
+        .theme-btn.active {
+            border-color: #4a90d9;
+            background: #e8f0fe;
+            box-shadow: 0 0 10px rgba(74, 144, 217, 0.2);
+        }
+
+        /* ===== Memory Section ===== */
+        .memory-section {
+            margin-bottom: 1rem;
+            background: #f7fafc;
+            border-radius: 1rem;
+            padding: 0.6rem 1rem;
+            border: 1px solid #e2e8f0;
+            min-height: 50px;
+        }
+
+        .memory-title {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .memory-items {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            min-height: 28px;
+            align-items: center;
+        }
+
+        .memory-item {
+            background: #e8f0fe;
+            color: #4a90d9;
+            padding: 0.2rem 0.7rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #d4e3fc;
+            white-space: nowrap;
+        }
+
+        .memory-item:hover {
+            background: #d4e3fc;
+            transform: scale(1.05);
+        }
+
+        .memory-empty {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        /* ===== Button Grid ===== */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--gap);
+        }
+
+        .btn {
+            padding: 1rem 0.2rem;
+            font-size: 1.3rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 1.2rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            line-height: 1;
+            aspect-ratio: 1 / 1;
+        }
+
+        .btn:active {
+            transform: scale(0.92);
+        }
+
+        .btn-number {
+            background: var(--bg-number);
+            color: var(--text-primary);
+        }
+        .btn-number:hover {
+            background: var(--bg-number-hover);
+        }
+
+        .btn-operator {
+            background: var(--bg-operator);
+            color: #4a90d9;
+            font-size: 1.5rem;
+        }
+        .btn-operator:hover {
+            background: var(--bg-operator-hover);
+        }
+
+        .btn-function {
+            background: var(--bg-function);
+            color: #4a5568;
+            font-size: 1rem;
+        }
+        .btn-function:hover {
+            background: var(--bg-function-hover);
+        }
+
+        .btn-equals {
+            background: var(--bg-equals);
+            color: var(--text-white);
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(74, 144, 217, 0.3);
+        }
+        .btn-equals:hover {
+            background: var(--bg-equals-hover);
+        }
+
+        .btn-zero {
+            grid-column: span 2;
+            aspect-ratio: auto;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 480px) {
+            .calculator {
+                padding: 1rem;
+            }
+            .result {
+                font-size: 2rem;
+            }
+            .btn {
+                font-size: 1.1rem;
+                padding: 0.8rem 0.2rem;
+            }
+            .visual-emoji {
+                font-size: 1.5rem;
+            }
+            .display {
+                padding: 0.8rem 1rem;
+                min-height: 110px;
+            }
+            .theme-btn {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <!-- Display -->
+        <div class="display">
+            <div class="display-top">
+                <div class="expression" id="expression"></div>
+                <span class="memory-badge" id="memoryBadge" style="display:none;">📋 3</span>
+            </div>
+            <div class="result" id="result">0</div>
+            <div class="visual-area" id="visualArea">
+                <span class="visual-emoji">😊</span>
+            </div>
+        </div>
+
+        <!-- Theme Selector -->
+        <div class="theme-selector">
+            <button class="theme-btn active" data-theme="🍎">🍎 Fruits</button>
+            <button class="theme-btn" data-theme="⭐">⭐ Stars</button>
+            <button class="theme-btn" data-theme="🐶">🐶 Animals</button>
+            <button class="theme-btn" data-theme="🚗">🚗 Vehicles</button>
+            <button class="theme-btn" data-theme="🎈">🎈 Party</button>
+        </div>
+
+        <!-- Memory -->
+        <div class="memory-section">
+            <div class="memory-title">📋 Last Calculations</div>
+            <div class="memory-items" id="memoryContainer">
+                <span class="memory-empty">no calculations yet</span>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="buttons">
+            <button class="btn btn-function" data-value="clear">AC</button>
+            <button class="btn btn-function" data-value="backspace">⌫</button>
+            <button class="btn btn-function" data-value="percent">%</button>
+            <button class="btn btn-operator" data-value="divide">÷</button>
+
+            <button class="btn btn-number" data-value="seven">7</button>
+            <button class="btn btn-number" data-value="eight">8</button>
+            <button class="btn btn-number" data-value="nine">9</button>
+            <button class="btn btn-operator" data-value="multiply">×</button>
+
+            <button class="btn btn-number" data-value="four">4</button>
+            <button class="btn btn-number" data-value="five">5</button>
+            <button class="btn btn-number" data-value="six">6</button>
+            <button class="btn btn-operator" data-value="subtract">−</button>
+
+            <button class="btn btn-number" data-value="one">1</button>
+            <button class="btn btn-number" data-value="two">2</button>
+            <button class="btn btn-number" data-value="three">3</button>
+            <button class="btn btn-operator" data-value="add">+</button>
+
+            <button class="btn btn-number btn-zero" data-value="zero">0</button>
+            <button class="btn btn-number" data-value="decimal">.</button>
+            <button class="btn btn-equals" data-value="equals">=</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // KIDS CALCULATOR - CLEAN VERSION
+        // ============================================
+
+        // ===== DOM References =====
+        const expressionDisplay = document.getElementById('expression');
+        const resultDisplay = document.getElementById('result');
+        const visualArea = document.getElementById('visualArea');
+        const memoryContainer = document.getElementById('memoryContainer');
+        const memoryBadge = document.getElementById('memoryBadge');
+
+        // ===== State =====
+        let currentInput = '0';
+        let expression = '';
+        let previousValue = null;
+        let operator = null;
+        let resetNext = false;
+        let justEvaluated = false;
+        let currentTheme = '🍎';
+        let memoryHistory = [];
+
+        // ===== Emoji Themes =====
+        const themes = {
+            '🍎': ['🍎', '🍏', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍑', '🍒', '🫐', '🥝', '🍍'],
+            '⭐': ['⭐', '🌟', '✨', '🌈', '☀️', '🌙', '🌺', '🌸', '🌻', '🌹', '🌷', '🌼', '💫', '🌠'],
+            '🐶': ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸'],
+            '🚗': ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚲', '🛴', '✈️'],
+            '🎈': ['🎈', '🎉', '🎊', '🎁', '🎀', '🎂', '🧁', '🍭', '🍬', '🍫', '🎠', '🎡', '🎪', '🎨']
+        };
+
+        // ===== Number Words =====
+        const numberWords = {
+            'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+            'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9'
+        };
+
+        const wordNumbers = {
+            '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+            '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine'
+        };
+
+        function numberToWord(num) {
+            return num.toString().split('').map(d => wordNumbers[d] || d).join(' ');
+        }
+
+        function getRandomEmoji(theme) {
+            const emojis = themes[theme] || themes['🍎'];
+            return emojis[Math.floor(Math.random() * emojis.length)];
+        }
+
+        // ===== Show Visual =====
+        function showVisual(number, isResult = false, op = null, secondNum = null) {
+            visualArea.innerHTML = '';
+
+            if (number === 'Error' || number === '0' || number === '0.') {
+                const span = document.createElement('span');
+                span.className = 'visual-emoji';
+                span.textContent = '😊';
+                visualArea.appendChild(span);
+                return;
+            }
+
+            const num = parseFloat(number);
+            if (isNaN(num) || num === 0) {
+                const span = document.createElement('span');
+                span.className = 'visual-emoji';
+                span.textContent = '😊';
+                visualArea.appendChild(span);
+                return;
+            }
+
+            // If we have an operation, show both sides
+            if (op && secondNum !== null) {
+                const firstCount = Math.min(Math.round(num), 12);
+                const secondCount = Math.min(Math.round(secondNum), 12);
+
+                // First group
+                for (let i = 0; i < firstCount; i++) {
+                    const span = document.createElement('span');
+                    span.className = 'visual-emoji';
+                    span.textContent = getRandomEmoji(currentTheme);
+                    span.style.animationDelay = `${i * 0.04}s`;
+                    visualArea.appendChild(span);
+                }
+
+                // Operator
+                const opSpan = document.createElement('span');
+                opSpan.className = 'visual-emoji operator-symbol';
+                const symbols = { 'add': '+', 'subtract': '−', 'multiply': '×', 'divide': '÷' };
+                opSpan.textContent = symbols[op] || op;
+                visualArea.appendChild(opSpan);
+
+                // Second group
+                for (let i = 0; i < secondCount; i++) {
+                    const span = document.createElement('span');
+                    span.className = 'visual-emoji';
+                    span.textContent = getRandomEmoji(currentTheme);
+                    span.style.animationDelay = `${i * 0.04}s`;
+                    visualArea.appendChild(span);
+                }
+
+                return;
+            }
+
+            // Just show the number as emojis
+            const count = Math.min(Math.round(num), 20);
+            for (let i = 0; i < count; i++) {
+                const span = document.createElement('span');
+                span.className = 'visual-emoji' + (isResult ? ' result-emoji' : '');
+                span.textContent = getRandomEmoji(currentTheme);
+                span.style.animationDelay = `${i * 0.04}s`;
+                visualArea.appendChild(span);
+            }
+        }
+
+        // ===== Update Display =====
+        function updateDisplay(keepVisual = false) {
+            // Update text
+            if (currentInput === 'Error') {
+                resultDisplay.textContent = 'Error';
+                return;
+            }
+
+            if (currentInput === '0' || currentInput === '0.') {
+                resultDisplay.textContent = '0';
+            } else if (currentInput.includes('.')) {
+                resultDisplay.textContent = currentInput;
+            } else {
+                resultDisplay.textContent = currentInput;
+            }
+
+            expressionDisplay.textContent = expression;
+
+            // Update visual
+            if (!keepVisual) {
+                const num = parseFloat(currentInput);
+                if (!isNaN(num) && num !== 0) {
+                    showVisual(currentInput, true);
+                } else if (currentInput === '0' || currentInput === '0.') {
+                    visualArea.innerHTML = '<span class="visual-emoji">😊</span>';
+                }
+            }
+        }
+
+        // ===== Memory =====
+        function updateMemory() {
+            memoryContainer.innerHTML = '';
+            
+            if (memoryHistory.length === 0) {
+                memoryContainer.innerHTML = '<span class="memory-empty">no calculations yet</span>';
+                memoryBadge.style.display = 'none';
+                return;
+            }
+
+            memoryBadge.style.display = 'inline';
+            memoryBadge.textContent = `📋 ${memoryHistory.length}`;
+
+            const displayHistory = [...memoryHistory].reverse();
+            displayHistory.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'memory-item';
+                div.textContent = `${item.expression} = ${item.result}`;
+                div.title = 'Click to use this result';
+                
+                div.addEventListener('click', function() {
+                    const numValue = item.resultValue !== undefined ? item.resultValue : parseFloat(item.result);
+                    if (!isNaN(numValue)) {
+                        currentInput = String(numValue);
+                        resetNext = true;
+                        justEvaluated = false;
+                        updateDisplay();
+                        showVisual(currentInput, true);
+                    }
+                });
+                
+                memoryContainer.appendChild(div);
+            });
+        }
+
+        function addToMemory(expressionText, resultText, resultValue) {
+            memoryHistory.unshift({
+                expression: expressionText,
+                result: resultText,
+                resultValue: resultValue
+            });
+            
+            if (memoryHistory.length > 3) {
+                memoryHistory.pop();
+            }
+            
+            updateMemory();
+        }
+
+        function clearMemory() {
+            memoryHistory = [];
+            updateMemory();
+        }
+
+        // ===== Core Functions =====
+        function resetCalculator() {
+            currentInput = '0';
+            expression = '';
+            previousValue = null;
+            operator = null;
+            resetNext = false;
+            justEvaluated = false;
+            updateDisplay();
+            visualArea.innerHTML = '<span class="visual-emoji">😊</span>';
+        }
+
+        function inputNumber(value) {
+            if (resetNext) {
+                currentInput = value;
+                resetNext = false;
+                justEvaluated = false;
+                updateDisplay();
+                return;
+            }
+
+            if (currentInput === '0' && value !== '.') {
+                currentInput = value;
+            } else {
+                if (value === '.' && currentInput.includes('.')) return;
+                currentInput += value;
+            }
+            updateDisplay();
+        }
+
+        function handleOperator(op) {
+            const currentNumber = parseFloat(currentInput);
+            if (isNaN(currentNumber)) return;
+
+            if (operator && !resetNext) {
+                const result = calculate(previousValue, currentNumber, operator);
+                if (result === undefined) {
+                    resetCalculator();
+                    currentInput = 'Error';
+                    expression = 'Cannot divide by zero';
+                    updateDisplay();
+                    return;
+                }
+                currentInput = String(result);
+                previousValue = result;
+            } else {
+                previousValue = currentNumber;
+            }
+
+            const symbol = { 'add': '+', 'subtract': '−', 'multiply': '×', 'divide': '÷' } [op] || op;
+            expression = `${currentInput} ${symbol} `;
+            operator = op;
+            resetNext = true;
+            justEvaluated = false;
+            
+            // Show visual with both numbers
+            if (previousValue !== null) {
+                showVisual(String(previousValue), false, op, currentNumber);
+            }
+            
+            updateDisplay(true);
+        }
+
+        function calculate(a, b, op) {
+            let result;
+            switch (op) {
+                case 'add': result = a + b; break;
+                case 'subtract': result = a - b; break;
+                case 'multiply': result = a * b; break;
+                case 'divide':
+                    if (b === 0) return undefined;
+                    result = a / b;
+                    break;
+                default: return b;
+            }
+            if (typeof result === 'number' && !Number.isInteger(result)) {
+                result = parseFloat(result.toPrecision(12));
+            }
+            return result;
+        }
+
+        function evaluate() {
+            if (!operator || resetNext) {
+                if (!operator) {
+                    expression = '';
+                    updateDisplay();
+                }
+                return;
+            }
+
+            const currentNumber = parseFloat(currentInput);
+            if (isNaN(currentNumber)) return;
+
+            const result = calculate(previousValue, currentNumber, operator);
+            if (result === undefined) {
+                resetCalculator();
+                currentInput = 'Error';
+                expression = 'Cannot divide by zero';
+                updateDisplay();
+                return;
+            }
+
+            const symbol = { 'add': '+', 'subtract': '−', 'multiply': '×', 'divide': '÷' } [operator] || operator;
+            const exprText = `${previousValue} ${symbol} ${currentInput}`;
+            const resultText = String(result);
+            
+            expression = `${exprText} =`;
+            currentInput = String(result);
+            
+            addToMemory(exprText, resultText, result);
+            
+            // Show result with visual
+            showVisual(String(result), true);
+            
+            previousValue = null;
+            operator = null;
+            resetNext = true;
+            justEvaluated = true;
+            
+            updateDisplay(true);
+        }
+
+        function percentage() {
+            const num = parseFloat(currentInput);
+            if (isNaN(num)) return;
+            currentInput = String(num / 100);
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (resetNext || justEvaluated) {
+                resetCalculator();
+                return;
+            }
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+
+        // Theme Selector
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTheme = this.dataset.theme;
+                // Refresh visual
+                const num = parseFloat(currentInput);
+                if (!isNaN(num) && num !== 0) {
+                    showVisual(currentInput, true);
+                }
+            });
+        });
+
+        // Buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const value = this.dataset.value;
+
+                switch (value) {
+                    case 'clear': resetCalculator(); break;
+                    case 'backspace': backspace(); break;
+                    case 'percent': percentage(); break;
+                    case 'equals': evaluate(); break;
+                    case 'add':
+                    case 'subtract':
+                    case 'multiply':
+                    case 'divide':
+                        handleOperator(value);
+                        break;
+                    case 'decimal':
+                        inputNumber('.');
+                        break;
+                    default:
+                        if (numberWords[value] !== undefined) {
+                            inputNumber(numberWords[value]);
+                        }
+                        break;
+                }
+            });
+        });
+
+        // Keyboard
+        document.addEventListener('keydown', function(e) {
+            const key = e.key;
+
+            if (/^[0-9]$/.test(key)) {
+                e.preventDefault();
+                inputNumber(key);
+                return;
+            }
+
+            if (key === '.') { e.preventDefault();
+                inputNumber('.'); return; }
+            if (key === '+') { e.preventDefault();
+                handleOperator('add'); return; }
+            if (key === '-') { e.preventDefault();
+                handleOperator('subtract'); return; }
+            if (key === '*') { e.preventDefault();
+                handleOperator('multiply'); return; }
+            if (key === '/') { e.preventDefault();
+                handleOperator('divide'); return; }
+            if (key === 'Enter') { e.preventDefault();
+                evaluate(); return; }
+            if (key === 'Escape') { e.preventDefault();
+                resetCalculator(); return; }
+            if (key === 'Backspace') { e.preventDefault();
+                backspace(); return; }
+            if (key === '%') { e.preventDefault();
+                percentage(); return; }
+            if (key === 'm' || key === 'M') { e.preventDefault();
+                clearMemory(); }
+        });
+
+        // ===== Start =====
+        resetCalculator();
+        updateMemory();
+        visualArea.innerHTML = '<span class="visual-emoji">😊</span>';
+
+        console.log('🍎 Kids Calculator ready!');
+    </script>
+
+</body>
+</html>
