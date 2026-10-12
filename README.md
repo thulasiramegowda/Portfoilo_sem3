@@ -1,5 +1,8 @@
 # Portfolio Building – 3rd Semester
 
+A personal portfolio project showcasing my technical skills, projects, and development journey.
+
+
 ## 📌 About the Project
 
 This repository contains my work for the **Portfolio Building** subject in my 3rd Semester.
